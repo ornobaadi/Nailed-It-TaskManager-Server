@@ -74,6 +74,36 @@ async function run() {
             }
         });
 
+        // update task info
+        // Update task details
+        app.put('/tasks/:_id', async (req, res) => {
+            const taskId = req.params._id;
+            const updatedTask = req.body;
+
+            if (!updatedTask.title || !updatedTask.email) {
+                return res.status(400).send({ message: 'Title and email are required' });
+            }
+
+            try {
+                // Remove the _id field from the update object
+                const { _id, ...updateData } = updatedTask;
+
+                const result = await taskCollection.updateOne(
+                    { _id: new ObjectId(taskId) },
+                    { $set: updateData } // Update only the allowed fields
+                );
+
+                if (result.matchedCount === 0) {
+                    return res.status(404).send({ message: 'Task not found' });
+                }
+
+                res.send({ message: 'Task updated successfully' });
+            } catch (error) {
+                console.error('Database error:', error);
+                res.status(500).send({ message: 'Server error', error: error.message });
+            }
+        });
+
         // Update task category
         app.patch('/tasks/:_id', async (req, res) => {
             const taskId = req.params._id;
@@ -94,6 +124,26 @@ async function run() {
                 }
 
                 res.send({ message: 'Task category updated successfully' });
+            } catch (error) {
+                console.error('Database error:', error);
+                res.status(500).send({ message: 'Server error', error: error.message });
+            }
+        });
+
+        app.delete('/tasks/:_id', async (req, res) => {
+            const taskId = req.params._id;
+
+            try {
+                // Convert taskId to ObjectId
+                const objectId = new ObjectId(taskId);
+
+                const result = await taskCollection.deleteOne({ _id: objectId });
+
+                if (result.deletedCount === 0) {
+                    return res.status(404).send({ message: 'Task not found' });
+                }
+
+                res.send({ message: 'Task deleted successfully' });
             } catch (error) {
                 console.error('Database error:', error);
                 res.status(500).send({ message: 'Server error', error: error.message });
