@@ -1,12 +1,22 @@
-const express = require('express');
+const express = require("express");
 const app = express();
-const cors = require('cors');
-require('dotenv').config();
+const cors = require("cors");
+require("dotenv").config();
 const port = process.env.PORT || 5000;
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+    origin: [
+        "https://nailed-it-1.web.app",
+        "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.xd8rz.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -21,13 +31,13 @@ const client = new MongoClient(uri, {
 
 async function run() {
     try {
-        await client.connect();
+        // await client.connect();
 
-        const taskCollection = client.db('nailDB').collection('tasks');
-        const userCollection = client.db('nailDB').collection('users');
+        const taskCollection = client.db("nailDB").collection("tasks");
+        const userCollection = client.db("nailDB").collection("users");
 
         // Users API
-        app.post('/users', async (req, res) => {
+        app.post("/users", async (req, res) => {
             const user = req.body;
             const query = { email: user.email };
 
@@ -35,14 +45,14 @@ async function run() {
                 const existingUser = await userCollection.findOne(query);
 
                 if (existingUser) {
-                    return res.send({ message: 'User already exists', insertedId: null });
+                    return res.send({ message: "User already exists", insertedId: null });
                 }
 
                 const result = await userCollection.insertOne(user);
-                res.send({ message: 'New user created', insertedId: result.insertedId });
+                res.send({ message: "New user created", insertedId: result.insertedId });
             } catch (error) {
-                console.error('Database error:', error);
-                res.status(500).send({ message: 'Server error', error: error.message });
+                console.error("Database error:", error);
+                res.status(500).send({ message: "Server error", error: error.message });
             }
         });
 
